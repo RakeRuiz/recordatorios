@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Salón Manager - Nuevo Seguimiento</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #000);
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #ddd);
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            -webkit-appearance: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 5px;
+        }
+
+        .examples {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .examples .title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--tg-theme-text-color, #000);
+        }
+
+        .examples .item {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #666);
+            margin-left: 10px;
+        }
+
+        .conditional {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💅 Nuevo Seguimiento</h1>
+        <p>Registra el seguimiento de tu clienta</p>
+    </div>
+
+    <form id="seguimientoForm">
+        <!-- Nombre -->
+        <div class="form-group">
+            <label>👤 Nombre de la clienta <span class="required">*</span></label>
+            <input type="text" id="nombre" name="nombre" placeholder="Ej: María González" required>
+            <div class="error-message" id="error-nombre">Por favor ingresa el nombre</div>
+        </div>
+
+        <!-- Teléfono -->
+        <div class="form-group">
+            <label>📱 WhatsApp <span class="required">*</span></label>
+            <input type="tel" id="telefono" name="telefono" placeholder="+52 999 123 4567" required>
+            <div class="hint">Incluye código de país (Ej: +52 para México)</div>
+            <div class="error-message" id="error-telefono">Por favor ingresa un teléfono válido</div>
+        </div>
+
+        <!-- Tipo de Seguimiento -->
+        <div class="form-group">
+            <label>📋 Tipo de seguimiento <span class="required">*</span></label>
+            <select id="tipo" name="tipo" required>
+                <option value="">Selecciona una opción</option>
+                <option value="Cita">Cita</option>
+                <option value="Cobro">Cobro</option>
+                <option value="Mantenimiento">Mantenimiento</option>
+                <option value="Promoción">Promoción</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+
+        <!-- Fecha del Evento -->
+        <div class="form-group">
+            <label>📅 Fecha del evento/cita/vencimiento <span class="required">*</span></label>
+            <input type="date" id="fecha_evento" name="fecha_evento" required>
+            <div class="hint">Fecha real de la cita, vencimiento o evento</div>
+        </div>
+
+        <!-- Hora (solo para citas) -->
+        <div class="form-group conditional" id="grupo-hora">
+            <label>🕐 Hora de la cita <span class="required">*</span></label>
+            <input type="time" id="hora" name="hora">
+            <div class="hint">Hora exacta de la cita</div>
+        </div>
+
+        <!-- Fecha del Recordatorio -->
+        <div class="form-group">
+            <label>⏰ Fecha para enviar el recordatorio <span class="required">*</span></label>
+            <input type="date" id="fecha_recordatorio" name="fecha_recordatorio" required>
+            <div class="hint">¿Qué día quieres que se envíe el mensaje?</div>
+            <div class="examples">
+                <div class="title">💡 Sugerencias:</div>
+                <div class="item">• Cita → 1 día antes de la cita</div>
+                <div class="item">• Cobro → 7 días antes del vencimiento</div>
+                <div class="item">• Mantenimiento → 3 días antes</div>
+            </div>
+        </div>
+        
+        <!-- Hora del Recordatorio (opcional) -->
+        <div class="form-group">
+            <label>🕐 Hora para enviar (opcional)</label>
+            <input type="time" id="hora_recordatorio" name="hora_recordatorio">
+            <div class="hint">Si no especificas, se enviará a las 9:00 AM</div>
+        </div>
+
+        <!-- Notas -->
+        <div class="form-group">
+            <label>📝 Notas adicionales (opcional)</label>
+            <textarea id="notas" name="notas" rows="3" placeholder="Ej: Prefiere citas por la tarde"></textarea>
+        </div>
+    </form>
+
+    <div class="success-animation" id="successMessage">
+        ✅ ¡Guardado exitosamente!
+    </div>
+
+    <script>
+        // Inicializar Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Expandir a pantalla completa
+        tg.enableClosingConfirmation(); // Confirmar antes de cerrar
+
+        // Obtener elementos del formulario
+        const form = document.getElementById('seguimientoForm');
+        const tipoSelect = document.getElementById('tipo');
+        const grupoHora = document.getElementById('grupo-hora');
+        const horaInput = document.getElementById('hora');
+
+        // Mostrar/ocultar campo de hora según el tipo
+        tipoSelect.addEventListener('change', function() {
+            if (this.value === 'Cita') {
+                grupoHora.style.display = 'block';
+                horaInput.setAttribute('required', 'required');
+            } else {
+                grupoHora.style.display = 'none';
+                horaInput.removeAttribute('required');
+                horaInput.value = '';
+            }
+        });
+
+        // Validación de teléfono en tiempo real
+        const telefonoInput = document.getElementById('telefono');
+        telefonoInput.addEventListener('input', function() {
+            // Remover caracteres no numéricos excepto + y espacios
+            this.value = this.value.replace(/[^\d+\s]/g, '');
+        });
+
+        // Configurar el botón principal de Telegram
+        tg.MainButton.text = "💾 Guardar Seguimiento";
+        tg.MainButton.color = "#2ecc71";
+        tg.MainButton.show();
+
+        // Cuando se presiona el botón principal
+        tg.MainButton.onClick(function() {
+            if (validarFormulario()) {
+                enviarDatos();
+            }
+        });
+
+        // Validar formulario
+        function validarFormulario() {
+            let valido = true;
+
+            // Validar nombre
+            const nombre = document.getElementById('nombre').value.trim();
+            if (!nombre) {
+                mostrarError('error-nombre');
+                valido = false;
+            }
+
+            // Validar teléfono
+            const telefono = document.getElementById('telefono').value.trim();
+            if (!telefono || telefono.length < 10) {
+                mostrarError('error-telefono');
+                valido = false;
+            }
+
+            // Validar campos requeridos
+            const tipo = document.getElementById('tipo').value;
+            const fechaEvento = document.getElementById('fecha_evento').value;
+            const fechaRecordatorio = document.getElementById('fecha_recordatorio').value;
+
+            if (!tipo || !fechaEvento || !fechaRecordatorio) {
+                tg.showAlert('Por favor completa todos los campos obligatorios');
+                valido = false;
+            }
+            
+            // Validar que fecha de recordatorio sea antes o igual que fecha del evento
+            if (fechaRecordatorio && fechaEvento) {
+                const dateRecordatorio = new Date(fechaRecordatorio);
+                const dateEvento = new Date(fechaEvento);
+                if (dateRecordatorio > dateEvento) {
+                    tg.showAlert('La fecha del recordatorio debe ser antes o igual a la fecha del evento');
+                    valido = false;
+                }
+            }
+
+            // Si es cita, validar hora
+            if (tipo === 'Cita') {
+                const hora = document.getElementById('hora').value;
+                if (!hora) {
+                    tg.showAlert('Para citas debes especificar la hora');
+                    valido = false;
+                }
+            }
+
+            return valido;
+        }
+
+        // Mostrar error
+        function mostrarError(errorId) {
+            const errorElement = document.getElementById(errorId);
+            errorElement.style.display = 'block';
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Enviar datos
+        function enviarDatos() {
+            tg.MainButton.showProgress();
+            tg.MainButton.disable();
+
+            // Recopilar datos del formulario
+            const datos = {
+                nombre: document.getElementById('nombre').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+                tipo_seguimiento: document.getElementById('tipo').value,
+                fecha_evento: document.getElementById('fecha_evento').value,
+                hora_evento: document.getElementById('hora').value || '',
+                fecha_recordatorio: document.getElementById('fecha_recordatorio').value,
+                hora_recordatorio: document.getElementById('hora_recordatorio').value || '09:00',
+                notas: document.getElementById('notas').value.trim(),
+                // Datos del usuario de Telegram
+                telegram_user_id: tg.initDataUnsafe.user?.id || '',
+                telegram_username: tg.initDataUnsafe.user?.username || '',
+                timestamp: new Date().toISOString()
+            };
+
+            // AQUÍ VA TU WEBHOOK DE N8N
+            const webhookURL = 'TU_WEBHOOK_URL_DE_N8N_AQUI';
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(response => response.json())
+            .then(data => {
+                tg.MainButton.hideProgress();
+                tg.MainButton.enable();
+                
+                // Mostrar mensaje de éxito
+                document.getElementById('successMessage').style.display = 'block';
+                
+                setTimeout(() => {
+                    tg.close(); // Cerrar el Mini App
+                }, 1500);
+            })
+            .catch(error => {
+                tg.MainButton.hideProgress();
+                tg.MainButton.enable();
+                tg.showAlert('Error al guardar. Por favor intenta de nuevo.');
+                console.error('Error:', error);
+            });
+        }
+
+        // Prevenir envío tradicional del formulario
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
